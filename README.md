@@ -1,6 +1,8 @@
 Запуск:
-1) npm ci
-2) docker-compose up -d
-3) http://localhost:8080/api
+1) npm ci --force
+2) создать .env в корневой папке проекта
+3) docker-compose up -d
+4) npm run start:dev
+5) http://localhost:8080/api/docs
 
-Регистрация -> всатвить токен в сваггер -> получен доступ к закрытым ручкам
+Регистрация -> вставить токен в сваггер -> получен доступ к закрытым ручкам
