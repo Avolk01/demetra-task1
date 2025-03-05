@@ -1,4 +1,6 @@
 Запуск:
 1) npm ci
 2) docker-compose up -d
-3) http://localhost
+3) http://localhost:8080/api
+
+Регистрация -> всатвить токен в сваггер -> получен доступ к закрытым ручкам
