@@ -44,9 +44,7 @@ export class UserRepository {
     const skip = (page - 1) * perPage;
     const take = perPage;
 
-    const count = await this.userModel.count();
-
-    const users = await this.userModel.find({
+    const [users, count] = await this.userModel.findAndCount({
       where: { login: Like(`%${loginFilter ?? ''}%`) },
       skip,
       take,
