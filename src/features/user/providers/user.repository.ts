@@ -1,12 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Like, Repository } from 'typeorm';
+import { IsNull, Like, Repository } from 'typeorm';
 import { UserEntity } from '../entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  GetUsersRequestDto,
-  GetUsersResponseDto,
-  RegisterRequestDto,
-} from '../dto';
+import { GetUsersRequestDto, GetUsersResponseDto } from '../dto';
+import { RegisterRequestDto } from '../../auth/dto';
 
 @Injectable()
 export class UserRepository {
@@ -15,24 +12,30 @@ export class UserRepository {
     private userModel: Repository<UserEntity>,
   ) {}
 
-  async findOneByLoginOrEmail(
-    login: string,
-    email: string,
-  ): Promise<UserEntity> {
+  async findOneByLoginOrEmail(input: {
+    login: string;
+    email: string;
+    isActive: boolean;
+  }): Promise<UserEntity> {
+    const deletedAt = input.isActive ? IsNull() : undefined;
+
     return this.userModel.findOne({
-      where: [{ login }, { email }],
+      where: [
+        { login: input.login, deletedAt },
+        { email: input.email, deletedAt },
+      ],
     });
   }
 
   async findOneByLogin(login: string): Promise<UserEntity | null> {
     return this.userModel.findOne({
-      where: { login },
+      where: { login, deletedAt: IsNull() },
     });
   }
 
   async findOneById(id: string): Promise<UserEntity> {
     return this.userModel.findOne({
-      where: { _id: id },
+      where: { _id: id, deletedAt: IsNull() },
     });
   }
 
@@ -45,7 +48,7 @@ export class UserRepository {
     const take = perPage;
 
     const [users, count] = await this.userModel.findAndCount({
-      where: { login: Like(`%${loginFilter ?? ''}%`) },
+      where: loginFilter ? { login: Like(`%${loginFilter}%`) } : {},
       skip,
       take,
     });
@@ -62,15 +65,12 @@ export class UserRepository {
     return this.userModel.save(input);
   }
 
-  async updateUser(input: Partial<UserEntity>): Promise<UserEntity> {
-    const user = await this.userModel.findOne({
-      where: { _id: input._id },
-    });
-
-    return this.userModel.save({ ...user, ...input });
+  async updateUser(input: Partial<UserEntity>): Promise<void> {
+    this.userModel.update({ _id: input._id }, input);
   }
 
   async deleteUserById(id: string): Promise<void> {
-    this.userModel.delete({ _id: id });
+    const now = new Date();
+    this.userModel.update({ _id: id }, { deletedAt: now });
   }
 }

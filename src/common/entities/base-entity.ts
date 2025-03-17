@@ -9,4 +9,7 @@ export class BaseEntity {
 
   @Column({ default: new Date(), name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ default: null, name: 'deleted_at', nullable: true })
+  deletedAt: Date;
 }

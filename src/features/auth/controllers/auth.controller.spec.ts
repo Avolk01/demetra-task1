@@ -1,21 +1,17 @@
-import { UserController } from '../controllers';
-import { UserService } from '../providers';
+import { AuthController } from '.';
+import { AuthService } from '../providers';
 
 describe('UserController', () => {
-  let userController: UserController;
-  let userService: UserService;
+  let userController: AuthController;
+  let authService: AuthService;
 
   beforeEach(async (): Promise<void> => {
-    userService = {
+    authService = {
       register: jest.fn(),
       login: jest.fn(),
-      getProfile: jest.fn(),
-      getUsers: jest.fn(),
-      updateUser: jest.fn(),
-      deleteUser: jest.fn(),
-    } as unknown as UserService;
+    } as unknown as AuthService;
 
-    userController = new UserController(userService);
+    userController = new AuthController(authService);
   });
 
   it('should be defined', () => {

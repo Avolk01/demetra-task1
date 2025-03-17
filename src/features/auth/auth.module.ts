@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './providers';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UserModule } from '../user/user.module';
+import { AuthGuard } from './guards';
+import { AuthController } from './controllers';
 
 @Module({
   imports: [
@@ -13,8 +16,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: +configService.get('JWT_EXPIRES_IN_MS') },
       }),
     }),
+    forwardRef(() => UserModule),
   ],
-  providers: [AuthService],
-  exports: [AuthService],
+  controllers: [AuthController],
+  providers: [AuthService, AuthGuard],
+  exports: [AuthService, AuthGuard],
 })
 export class AuthModule {}

@@ -1,11 +1,13 @@
-import { UserRepository, UserService } from '../providers';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from 'src/auth/providers';
+import { AuthService } from '.';
+import { UserService } from '../../user/providers';
+import { JwtService } from '@nestjs/jwt';
 
 describe('UserService', () => {
   let userService: UserService;
-  let userRepository: UserRepository;
   let configService: ConfigService;
+  let jwtService: JwtService;
+
   let authService: AuthService;
 
   beforeEach(async (): Promise<void> => {
@@ -13,20 +15,16 @@ describe('UserService', () => {
       get: jest.fn(),
     } as unknown as ConfigService;
 
-    userRepository = {
+    userService = {
       findOneByLoginOrEmail: jest.fn(),
       createUser: jest.fn(),
-    } as unknown as UserRepository;
+    } as unknown as UserService;
 
-    authService = {
-      generateToken: jest.fn(),
-    } as unknown as AuthService;
-
-    userService = new UserService(authService, userRepository, configService);
+    authService = new AuthService(jwtService, configService, userService);
   });
 
   it('should be defined', () => {
-    expect(userService).toBeDefined();
+    expect(authService).toBeDefined();
   });
 
   describe('register', (): void => {
@@ -40,11 +38,11 @@ describe('UserService', () => {
 
       const token = { access_token: 'token' };
 
-      jest.spyOn(userService, 'register').mockResolvedValue(token);
+      jest.spyOn(authService, 'register').mockResolvedValue(token);
 
-      const res = await userService.register(data);
+      const res = await authService.register(data);
 
-      expect(userService.register).toHaveBeenCalledWith(data);
+      expect(authService.register).toHaveBeenCalledWith(data);
       expect(res.access_token).toEqual(token.access_token);
     });
   });
