@@ -26,7 +26,10 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
+
+    if (isPublic) {
+      return true;
+    }
 
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
@@ -35,7 +38,7 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const payload: JWTPayloadDto = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
       });
 
       const user = await this.userService.findOneByLogin(payload.login);
@@ -48,6 +51,7 @@ export class AuthGuard implements CanActivate {
     } catch {
       throw new UnauthorizedException();
     }
+
     return true;
   }
 

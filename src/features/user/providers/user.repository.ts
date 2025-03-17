@@ -33,7 +33,7 @@ export class UserRepository {
     });
   }
 
-  async findOneById(id: string): Promise<UserEntity> {
+  async findOneById(id: string): Promise<UserEntity | null> {
     return this.userModel.findOne({
       where: { _id: id, deletedAt: IsNull() },
     });

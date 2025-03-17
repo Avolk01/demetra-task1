@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -11,6 +16,7 @@ import {
 } from '../dto';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/providers';
+import { RefreshTokenRepository } from './refresh-token.repository';
 
 @Injectable()
 export class AuthService {
@@ -18,14 +24,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
-
-  private async generateToken({
-    userId,
-    login,
-  }: JWTPayloadDto): Promise<string> {
-    return this.jwtService.signAsync({ userId, login });
-  }
 
   async login({ login, password }: LoginRequestDto): Promise<LoginResponseDto> {
     const user = await this.userService.findOneByLogin(login);
@@ -43,13 +43,21 @@ export class AuthService {
       );
     }
 
-    const accessToken = await this.generateToken({
-      userId: user._id,
+    const { accessToken, refreshToken } = await this.getTokens({
       login: user.login,
+      userId: user._id,
+    });
+
+    await this.refreshTokenRepository.deleteTokenByUserId(user._id);
+
+    await this.refreshTokenRepository.createToken({
+      token: refreshToken,
+      userId: user._id,
     });
 
     return {
       access_token: accessToken,
+      refresh_token: refreshToken,
     };
   }
 
@@ -76,13 +84,82 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const accessToken = await this.generateToken({
-      userId: newUser._id,
+    const { accessToken, refreshToken } = await this.getTokens({
       login: newUser.login,
+      userId: newUser._id,
+    });
+
+    await this.refreshTokenRepository.createToken({
+      token: refreshToken,
+      userId: newUser._id,
     });
 
     return {
       access_token: accessToken,
+      refresh_token: refreshToken,
+    };
+  }
+
+  async refresh(token: string): Promise<LoginResponseDto> {
+    try {
+      const payload: JWTPayloadDto = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+      });
+
+      const refreshTokenEntity =
+        await this.refreshTokenRepository.findOneByToken(token);
+
+      if (!refreshTokenEntity) {
+        throw new UnauthorizedException();
+      }
+
+      const { accessToken, refreshToken } = await this.getTokens(payload);
+
+      await this.refreshTokenRepository.deleteToken(token);
+
+      await this.refreshTokenRepository.createToken({
+        token: refreshToken,
+        userId: payload.userId,
+      });
+
+      return {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      };
+    } catch {
+      throw new UnauthorizedException();
+    }
+  }
+
+  private async getTokens(input: {
+    login: string;
+    userId: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessToken = await this.jwtService.signAsync(
+      {
+        login: input.login,
+        userId: input.userId,
+      },
+      {
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+        expiresIn: '1h',
+      },
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      {
+        login: input.login,
+        userId: input.userId,
+      },
+      {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        expiresIn: '7d',
+      },
+    );
+
+    return {
+      accessToken,
+      refreshToken,
     };
   }
 }

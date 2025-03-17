@@ -5,8 +5,10 @@ import {
   RegisterResponseDto,
   LoginRequestDto,
   LoginResponseDto,
+  RefreshTokenRequestDto,
 } from '../dto';
 import { AuthService } from '../providers';
+import { Public } from '../../../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -28,5 +30,16 @@ export class AuthController {
   @Post('auth/sign_in')
   async login(@Body() body: LoginRequestDto): Promise<LoginResponseDto> {
     return this.authService.login(body);
+  }
+
+  @Public()
+  @ApiOperation({
+    summary: 'Обновление рефреш токена',
+  })
+  @Post('auth/refresh')
+  async refresh(
+    @Body() body: RefreshTokenRequestDto,
+  ): Promise<LoginResponseDto> {
+    return this.authService.refresh(body.refreshToken);
   }
 }

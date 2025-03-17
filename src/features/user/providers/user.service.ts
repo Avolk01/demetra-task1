@@ -39,6 +39,10 @@ export class UserService {
     return this.userRepository.findOneByLoginOrEmail(input);
   }
 
+  async findOneById(id: string): Promise<UserEntity | null> {
+    return this.userRepository.findOneById(id);
+  }
+
   async findOneByLogin(login: string): Promise<UserEntity | null> {
     return this.userRepository.findOneByLogin(login);
   }
