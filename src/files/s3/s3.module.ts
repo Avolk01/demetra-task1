@@ -10,6 +10,7 @@ import { S3Service } from './s3.service';
     S3Service,
     {
       provide: S3Lib,
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return new AWS.S3({
           endpoint: 'http://127.0.0.1:9000',

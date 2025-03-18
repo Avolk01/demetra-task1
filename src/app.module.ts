@@ -5,6 +5,7 @@ import { UserModule } from './features/user/user.module';
 import { AuthModule } from './features/auth/auth.module';
 import { PostgresModule } from './databases/postgres.module';
 import { JwtModule } from '@nestjs/jwt';
+import { AvatarModule } from './features/avatars/avatars.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { JwtModule } from '@nestjs/jwt';
     UserModule,
     PostgresModule,
     AuthModule,
+    AvatarModule,
   ],
   controllers: [AppController],
 })
