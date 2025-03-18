@@ -1,9 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { GetUsersRequestDto, GetUsersResponseDto } from '../dto';
 import { UserRepository } from '.';
 import { UserEntity } from '../entities';
 import { RegisterRequestDto } from '../../auth/dto';
 import { RedisService } from '../../../databases/redis/redis.service';
+import { Transactional } from 'typeorm-transactional';
 
 const GET_USERS_REDIS_KEY = 'get_users';
 
@@ -66,7 +73,48 @@ export class UserService {
     return this.userRepository.findOneById(id);
   }
 
+  async findOneByUserId(id: number): Promise<UserEntity | null> {
+    return this.userRepository.findOneByUserId(id);
+  }
+
   async findOneByLogin(login: string): Promise<UserEntity | null> {
     return this.userRepository.findOneByLogin(login);
+  }
+
+  @Transactional()
+  async gift(input: {
+    fromId: string;
+    toId: number;
+    amount: number;
+  }): Promise<{ balance: number }> {
+    try {
+      const fromUser = await this.userRepository.findOneById(input.fromId);
+
+      if (!fromUser) {
+        throw new HttpException(
+          'Отправитель не найден',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const toUser = await this.userRepository.findOneByUserId(input.toId);
+      if (!toUser) {
+        throw new HttpException('Получатель не найден', HttpStatus.BAD_REQUEST);
+      }
+
+      if (fromUser.balance - input.amount < 0) {
+        throw new HttpException('Не хватает средств', HttpStatus.BAD_REQUEST);
+      }
+
+      fromUser.balance -= input.amount;
+      toUser.balance = +toUser.balance + input.amount;
+
+      await this.updateUser(fromUser);
+      await this.updateUser(toUser);
+
+      return { balance: +fromUser.balance.toFixed(2) };
+    } catch (e) {
+      throw new HttpException(e.message, e.status);
+    }
   }
 }

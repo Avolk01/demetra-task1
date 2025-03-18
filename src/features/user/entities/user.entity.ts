@@ -26,4 +26,7 @@ export class UserEntity extends BaseEntity {
 
   @Column({ length: 1000, nullable: true })
   description: string;
+
+  @Column({ default: 0, type: 'decimal', precision: 10, scale: 2 })
+  balance: number;
 }

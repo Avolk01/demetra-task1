@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { UserService } from '../providers';
 import {
   GetUsersRequestDto,
   GetUsersResponseDto,
+  MakeGiftRequestDto as GiveGiftRequestDto,
   UpdateUserRequestDto,
 } from '../dto';
 import { AuthGuard } from '../../auth/guards';
@@ -67,5 +69,20 @@ export class UserController {
     return {
       success: true,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Переслать средства пользователю',
+  })
+  @Post('give-gift')
+  async giveGift(
+    @UserId() userId: string,
+    @Body() body: GiveGiftRequestDto,
+  ): Promise<{ balance: number }> {
+    return this.userService.gift({
+      fromId: userId,
+      toId: body.userId,
+      amount: body.amount,
+    });
   }
 }

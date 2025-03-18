@@ -39,6 +39,12 @@ export class UserRepository {
     });
   }
 
+  async findOneByUserId(id: number): Promise<UserEntity | null> {
+    return this.userModel.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+  }
+
   async findAllUsers({
     page,
     perPage,
