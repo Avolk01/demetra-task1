@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { ConfigureModule } from './common/config/config.module';
 import { UserModule } from './features/user/user.module';
 import { AuthModule } from './features/auth/auth.module';
 import { PostgresModule } from './databases/postgres.module';
-import { JwtModule } from '@nestjs/jwt';
 import { AvatarModule } from './features/avatars/avatars.module';
+import { RedisModule } from './databases/redis/redis.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AvatarModule } from './features/avatars/avatars.module';
     PostgresModule,
     AuthModule,
     AvatarModule,
+    RedisModule,
   ],
   controllers: [AppController],
 })
