@@ -74,6 +74,9 @@ export class UserRepository {
   async updateUser(input: Partial<UserEntity>): Promise<void> {
     this.userModel.update({ _id: input._id }, input);
   }
+  async refreshBalances(): Promise<void> {
+    this.userModel.update({}, { balance: 0 });
+  }
 
   async deleteUserById(id: string): Promise<void> {
     const now = new Date();

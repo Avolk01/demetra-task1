@@ -57,6 +57,10 @@ export class UserService {
     this.userRepository.updateUser(data);
   }
 
+  async refreshBalances(): Promise<void> {
+    this.userRepository.refreshBalances();
+  }
+
   async createUser(input: RegisterRequestDto): Promise<UserEntity> {
     return this.userRepository.createUser(input);
   }

@@ -7,9 +7,12 @@ import { AuthModule } from './features/auth/auth.module';
 import { PostgresModule } from './databases/postgres.module';
 import { AvatarModule } from './features/avatars/avatars.module';
 import { RedisModule } from './databases/redis/redis.module';
+import { BullQueueModule } from './common/bull/bull-queue.module';
+import { BalanceModule } from './features/balance/balance.module';
 
 @Module({
   imports: [
+    BullQueueModule,
     JwtModule.register({
       global: true,
     }),
@@ -19,6 +22,7 @@ import { RedisModule } from './databases/redis/redis.module';
     AuthModule,
     AvatarModule,
     RedisModule,
+    BalanceModule,
   ],
   controllers: [AppController],
 })

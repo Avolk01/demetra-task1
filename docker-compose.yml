@@ -53,7 +53,7 @@ services:
       - REDIS_USER=${REDIS_USER}
       - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
     ports:
-      - 6380:6379
+      - "${REDIS_HOST_PORT}:${REDIS_CONTAINER_PORT}"
     volumes:
       - ./redisdata:/data
     deploy:
