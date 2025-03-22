@@ -2,6 +2,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -20,6 +21,8 @@ import { RefreshTokenRepository } from './refresh-token.repository';
 
 @Injectable()
 export class AuthService {
+  private logger = new Logger(AuthService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -31,12 +34,14 @@ export class AuthService {
     const user = await this.userService.findOneByLogin(login);
 
     if (!user) {
+      this.logger.error({ message: 'Пользователь не найден' });
       throw new HttpException('Пользователь не найден', HttpStatus.BAD_REQUEST);
     }
 
     const correctPassword = await bcrypt.compare(password, user.password);
 
     if (!correctPassword) {
+      this.logger.error({ message: 'Неверный логин или пароль' });
       throw new HttpException(
         'Неверный логин или пароль',
         HttpStatus.BAD_REQUEST,
@@ -55,6 +60,11 @@ export class AuthService {
       userId: user._id,
     });
 
+    this.logger.log({
+      message: 'Пользователь успешно авторизирован',
+      userId: user.id,
+    });
+
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -68,6 +78,9 @@ export class AuthService {
     });
 
     if (existingUser) {
+      this.logger.error({
+        message: 'Такой пользователь уже зарегистрирован или был удален',
+      });
       throw new HttpException(
         'Такой пользователь уже зарегистрирован или был удален',
         HttpStatus.BAD_REQUEST,
@@ -92,6 +105,11 @@ export class AuthService {
     await this.refreshTokenRepository.createToken({
       token: refreshToken,
       userId: newUser._id,
+    });
+
+    this.logger.log({
+      message: 'Пользователь успешно создан',
+      userId: newUser.id,
     });
 
     return {
@@ -122,11 +140,17 @@ export class AuthService {
         userId: payload.userId,
       });
 
+      this.logger.log({
+        message: 'Рефреш токен обновлен',
+        userId: payload.userId,
+      });
+
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
       };
-    } catch {
+    } catch (e) {
+      this.logger.error(e);
       throw new UnauthorizedException();
     }
   }

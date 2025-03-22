@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { GetUsersRequestDto, GetUsersResponseDto } from '../dto';
 import { UserRepository } from '.';
@@ -16,6 +17,8 @@ const GET_USERS_REDIS_KEY = 'get_users';
 
 @Injectable()
 export class UserService {
+  private logger = new Logger(UserService.name);
+
   constructor(
     @Inject(forwardRef(() => UserRepository))
     private readonly userRepository: UserRepository,
@@ -116,8 +119,11 @@ export class UserService {
       await this.updateUser(fromUser);
       await this.updateUser(toUser);
 
+      this.logger.log('Транзакция выполнена');
+
       return { balance: +fromUser.balance.toFixed(2) };
     } catch (e) {
+      this.logger.error(e);
       throw new HttpException(e.message, e.status);
     }
   }

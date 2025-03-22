@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 import { AvatarRepository } from './avatar.repository';
 import { IFileService } from '../../../files/files.adapter';
@@ -10,6 +10,8 @@ const AVATARS_COUNT_LIMIT = 5;
 
 @Injectable()
 export class AvatarService {
+  private logger = new Logger(AvatarService.name);
+
   constructor(
     private readonly avatarRepository: AvatarRepository,
     private readonly minioService: IFileService,
@@ -40,8 +42,11 @@ export class AvatarService {
 
       await this.avatarRepository.createAvatar({ userId, path });
 
+      this.logger.log({ message: 'Фото успешно загружено', path });
+
       return { path };
     } catch (e) {
+      this.logger.error(e);
       throw new HttpException(e.message, e.status);
     }
   }
@@ -52,6 +57,8 @@ export class AvatarService {
     });
 
     await this.avatarRepository.deleteAvatar({ userId, path });
+
+    this.logger.log({ message: 'Фото успешно удалено' });
   }
 
   async getAll(userId: string): Promise<AvatarEntity[]> {

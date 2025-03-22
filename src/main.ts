@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
@@ -24,6 +24,9 @@ async function bootstrap() {
   app.setGlobalPrefix('/api');
   const PORT = process.env.PORT ?? 8080;
   await app.listen(PORT);
-  console.log(`App listening on port: ${PORT}`);
+
+  const logger = new Logger('APP_MODULE');
+
+  logger.log(`App listening on port: ${PORT}`);
 }
 bootstrap();
